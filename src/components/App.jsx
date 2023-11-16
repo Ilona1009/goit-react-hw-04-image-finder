@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { ToastContainer } from 'react-toastify';
 import { Searchbar } from './Searchbar/Searchbar';
 import { fetchPhoto } from './api/api';
 import { ImageGallery } from './ImageGallery/ImageGallery';
@@ -13,28 +14,22 @@ export class App extends Component {
   };
 
   handleFormSubmit = newQuery => {
+    console.log(newQuery);
     this.setState(prevState => ({
       query: newQuery,
       page: 1,
       images: [],
     }));
   };
-  async componentDidUpdate(prevProp, prevState) {
-    const { query } = this.state;
-    if (prevState.query !== query) {
-      const initialImages = await fetchPhoto(query);
-      const { hits, totalHits } = initialImages;
-      console.log(hits);
-    }
-  }
 
   render() {
     const { images, query } = this.state;
     return (
       <div>
         <Searchbar onSubmit={this.handleFormSubmit} />
-        <ImageGallery images={images} />
+        <ImageGallery query={query} />
         <GlobalStyle />
+        <ToastContainer />
       </div>
     );
   }

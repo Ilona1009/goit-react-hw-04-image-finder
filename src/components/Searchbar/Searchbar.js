@@ -6,6 +6,7 @@ import {
   SearchFormInput,
   SearchBar,
 } from './SearchBarStyled';
+
 export class Searchbar extends Component {
   state = {
     query: '',
@@ -18,7 +19,7 @@ export class Searchbar extends Component {
     const { query } = this.state;
 
     if (query.trim() === '') {
-      toast.warn('Please, enter correct search word!');
+      toast.error('Please, enter correct search word!');
       return;
     }
     this.props.onSubmit(query);
