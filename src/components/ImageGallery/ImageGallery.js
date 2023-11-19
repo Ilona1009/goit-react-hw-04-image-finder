@@ -1,4 +1,4 @@
-import { Gallery, ImageItem } from './ImageGalleryStyled';
+import { Gallery } from './ImageGalleryStyled';
 import { ImageGalleryItem } from '../ImageGalleryItem/ImageGalleryItem';
 export function ImageGallery({ images, onOpenModal }) {
   return (
