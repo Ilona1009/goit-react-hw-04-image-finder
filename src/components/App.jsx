@@ -1,48 +1,46 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
 import { fetchPhoto } from './api/api';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { GlobalStyle } from './GlobalStyle';
 import toast, { Toaster } from 'react-hot-toast';
-import { animateScroll as scroll } from 'react-scroll';
 import { LoadMoreBtn } from './Button/Button';
 import { Loader } from './Loader/Loader';
 import { Modal } from './Modal/Modal';
+import { nanoid } from 'nanoid';
 
-const generateRandomIndex = () => Math.random();
-export class App extends Component {
-  state = {
-    images: [],
-    query: '',
-    page: 1,
-    per_page: 12,
-    isLoading: false,
-    error: false,
-    showModal: false,
-    largeImageURL: '',
-    tagImageAlt: '',
-    availablePages: 0,
-    randomIndex: generateRandomIndex(),
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [per_page] = useState(12);
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [tagImageAlt, setTagImageAlt] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [availablePages, setAvailablePages] = useState(0);
+  const [lastQueryId, setLastQueryId] = useState('');
+  const [currentQueryId, setCurrentQueryId] = useState('');
 
-  async componentDidUpdate(prevProps, prevState) {
-    const { query, page, per_page, randomIndex } = this.state;
-    if (
-      prevState.query !== query ||
-      prevState.page !== page ||
-      prevState.randomIndex !== randomIndex
-    ) {
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        this.setState({ isLoading: true, error: false });
+        setIsLoading(true);
+        setError(null);
+
+        if (query.trim() === '' || currentQueryId === lastQueryId) {
+          return;
+        }
+
         const initialImages = await fetchPhoto(query, page);
         const { hits, totalHits } = initialImages;
 
         if (hits.length > 0) {
-          this.setState(prevState => ({
-            images: [...prevState.images, ...hits],
-            availablePages: Math.ceil(totalHits / per_page),
-          }));
-
+          setImages(
+            prevState => ({ ...prevState.images, ...hits }),
+            setAvailablePages(Math.ceil(totalHits / per_page))
+          );
           toast.success('Successfully found!');
         } else {
           toast.error(
@@ -50,84 +48,68 @@ export class App extends Component {
           );
         }
       } catch (error) {
-        this.setState({ error });
+        setError({ error });
       } finally {
-        this.setState({ isLoading: false });
+        setIsLoading({ isLoading: false });
       }
-    }
-  }
+      const cleanup = () => {
+        setIsLoading(false);
+      };
 
-  handleFormSubmit = newQuery => {
-    this.setState(prevState => ({
-      query: newQuery,
-      page: 1,
-      images: [],
-      randomIndex: generateRandomIndex(),
-    }));
-  };
-  handleLoadMore = () => {
-    this.setState(
-      prevState => ({
-        page: prevState.page + 1,
-      }),
-      () => {
-        scroll.scrollToBottom();
+      if (query.trim() !== '') {
+        fetchData();
       }
-    );
+
+      return cleanup;
+    };
+  }, [query, page, per_page, lastQueryId, currentQueryId]);
+
+  const handleFormSubmit = newQuery => {
+    setQuery(newQuery);
+    setPage(1);
+    setImages([]);
+    setLastQueryId(currentQueryId);
+    setCurrentQueryId(nanoid());
   };
-  handleOpenModal = image => {
-    const { largeImageURL, tags } = image;
-    this.setState({
-      showModal: true,
-      largeImageURL,
-      tagImageAlt: tags,
-    });
+  const handleLoadMore = () => {
+    setPage(prevState => prevState + 1);
+  };
+  const handleOpenModal = image => {
+    setShowModal(true);
+    setTagImageAlt(image.tags);
+    setLargeImageURL(image.largeImageURL);
   };
 
-  handleCloseModal = () => {
-    this.setState({
-      showModal: false,
-      largeImageURL: '',
-      tagImageAlt: '',
-    });
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setLargeImageURL('');
+    setTagImageAlt('');
   };
 
-  render() {
-    const {
-      page,
-      availablePages,
-      images,
-      showModal,
-      largeImageURL,
-      tagImageAlt,
-      isLoading,
-      error,
-    } = this.state;
-    return (
-      <div>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        {isLoading && <Loader />}
+  return (
+    <div>
+      <Searchbar onSubmit={handleFormSubmit} />
+      {isLoading && <Loader />}
 
-        {error && <h1>{error.message}</h1>}
-        <ImageGallery images={images} onOpenModal={this.handleOpenModal} />
+      {error && <h1>{error.message}</h1>}
+      <ImageGallery images={images} onOpenModal={handleOpenModal} />
 
-        {page !== availablePages && images.length >= 11 && !error && (
-          <LoadMoreBtn onLoadMore={this.handleLoadMore} />
-        )}
+      {page !== availablePages && images.length >= 11 && !error && (
+        <LoadMoreBtn onLoadMore={handleLoadMore} />
+      )}
 
-        {showModal && (
-          <Modal onCloseModal={this.handleCloseModal}>
-            <img src={largeImageURL} alt={tagImageAlt} />
-          </Modal>
-        )}
+      {showModal && (
+        <Modal onCloseModal={handleCloseModal}>
+          <img src={largeImageURL} alt={tagImageAlt} />
+        </Modal>
+      )}
 
-        {error && (
-          <b>Oops! Something went wrong! Please try reloading this page! 🥹</b>
-        )}
+      {error && (
+        <b>Oops! Something went wrong! Please try reloading this page! 🥹</b>
+      )}
 
-        <GlobalStyle />
-        <Toaster />
-      </div>
-    );
-  }
-}
+      <GlobalStyle />
+      <Toaster />
+    </div>
+  );
+};
