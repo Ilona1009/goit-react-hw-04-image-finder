@@ -38,7 +38,7 @@ export const App = () => {
 
         if (hits.length > 0) {
           setImages(
-            prevState => ({ ...prevState.images, ...hits }),
+            prevState => [...prevState, ...hits],
             setAvailablePages(Math.ceil(totalHits / per_page))
           );
           toast.success('Successfully found!');
@@ -52,14 +52,13 @@ export const App = () => {
       } finally {
         setIsLoading({ isLoading: false });
       }
-      const cleanup = () => {
-        setIsLoading(false);
-      };
+    };
+    const cleanup = () => {
+      setIsLoading(false);
 
       if (query.trim() !== '') {
         fetchData();
       }
-
       return cleanup;
     };
   }, [query, page, per_page, lastQueryId, currentQueryId]);
