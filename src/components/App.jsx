@@ -37,7 +37,7 @@ export const App = () => {
         const { hits, totalHits } = initialImages;
 
         if (hits.length > 0) {
-          setImages(prevState => [...prevState, ...hits]);
+          setImages(prevImage => [...prevImage, ...hits]);
           setAvailablePages(Math.ceil(totalHits / per_page));
           toast.success('Successfully found!');
         } else {
