@@ -29,7 +29,7 @@ export const App = () => {
         setIsLoading(true);
         setError(null);
 
-        if (query.trim() === '' || currentQueryId === lastQueryId) {
+        if (query.trim() === '' || lastQueryId === currentQueryId) {
           return;
         }
 
@@ -37,10 +37,8 @@ export const App = () => {
         const { hits, totalHits } = initialImages;
 
         if (hits.length > 0) {
-          setImages(
-            prevState => [...prevState, ...hits],
-            setAvailablePages(Math.ceil(totalHits / per_page))
-          );
+          setImages(prevState => [...prevState, ...hits]);
+          setAvailablePages(Math.ceil(totalHits / per_page));
           toast.success('Successfully found!');
         } else {
           toast.error(
@@ -50,17 +48,17 @@ export const App = () => {
       } catch (error) {
         setError({ error });
       } finally {
-        setIsLoading({ isLoading: false });
+        setIsLoading(false);
       }
     };
     const cleanup = () => {
       setIsLoading(false);
-
-      if (query.trim() !== '') {
-        fetchData();
-      }
-      return cleanup;
     };
+
+    if (query.trim() !== '') {
+      fetchData();
+    }
+    return cleanup;
   }, [query, page, per_page, lastQueryId, currentQueryId]);
 
   const handleFormSubmit = newQuery => {
@@ -89,24 +87,22 @@ export const App = () => {
     <div>
       <Searchbar onSubmit={handleFormSubmit} />
       {isLoading && <Loader />}
-
       {error && <h1>{error.message}</h1>}
-      <ImageGallery images={images} onOpenModal={handleOpenModal} />
 
+      {images.length > 0 && (
+        <ImageGallery images={images} onOpenModal={handleOpenModal} />
+      )}
       {page !== availablePages && images.length >= 11 && !error && (
         <LoadMoreBtn onLoadMore={handleLoadMore} />
       )}
-
       {showModal && (
         <Modal onCloseModal={handleCloseModal}>
           <img src={largeImageURL} alt={tagImageAlt} />
         </Modal>
       )}
-
       {error && (
         <b>Oops! Something went wrong! Please try reloading this page! 🥹</b>
       )}
-
       <GlobalStyle />
       <Toaster />
     </div>
