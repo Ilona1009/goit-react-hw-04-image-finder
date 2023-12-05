@@ -20,7 +20,6 @@ export const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
   const [availablePages, setAvailablePages] = useState(0);
-  const [lastQueryId, setLastQueryId] = useState('');
   const [currentQueryId, setCurrentQueryId] = useState('');
 
   useEffect(() => {
@@ -29,7 +28,7 @@ export const App = () => {
         setIsLoading(true);
         setError(null);
 
-        if (query.trim() === '' || lastQueryId === currentQueryId) {
+        if (query.trim() === '' || currentQueryId) {
           return;
         }
 
@@ -59,14 +58,13 @@ export const App = () => {
       fetchData();
     }
     return cleanup;
-  }, [query, page, per_page, lastQueryId, currentQueryId]);
+  }, [query, page, per_page, currentQueryId]);
 
   const handleFormSubmit = newQuery => {
     setQuery(newQuery);
     setPage(1);
     setImages([]);
-    setLastQueryId(currentQueryId);
-    setCurrentQueryId(nanoid());
+    setCurrentQueryId(currentQueryId);
   };
   const handleLoadMore = () => {
     setPage(prevState => prevState + 1);
